@@ -1,0 +1,1615 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://thought-tree-framework.org/spec/EXECUTION_TRACE_SCHEMA_DRAFT.json",
+  "title": "Thought Tree Execution Trace Schema Draft",
+  "description": "Draft JSON Schema for recording the execution trace of a Thought Tree Module run. The trace records source metadata, engine metadata, workspace mappings, resolved inputs, variables, iterator expansions, execution graph information, operation events, produced artefacts, validation results, errors, retries, human review decisions and final outputs.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "trace_schema_version",
+    "trace_id",
+    "run",
+    "source",
+    "engine",
+    "workspace",
+    "status",
+    "timestamps",
+    "inputs",
+    "artefacts",
+    "operations",
+    "final_outputs"
+  ],
+  "properties": {
+    "trace_schema_version": {
+      "type": "string",
+      "description": "Version of this execution trace schema.",
+      "examples": [
+        "0.1.0-draft"
+      ]
+    },
+    "trace_id": {
+      "type": "string",
+      "description": "Unique identifier for this execution trace."
+    },
+    "run": {
+      "$ref": "#/$defs/run"
+    },
+    "source": {
+      "$ref": "#/$defs/source"
+    },
+    "engine": {
+      "$ref": "#/$defs/engine"
+    },
+    "workspace": {
+      "$ref": "#/$defs/workspace"
+    },
+    "status": {
+      "$ref": "#/$defs/status"
+    },
+    "timestamps": {
+      "$ref": "#/$defs/timestamps"
+    },
+    "inputs": {
+      "type": "array",
+      "description": "Root-level inputs supplied to the Thought Tree execution.",
+      "items": {
+        "$ref": "#/$defs/artefact_ref"
+      }
+    },
+    "resolved_variables": {
+      "type": "object",
+      "description": "Resolved variable values used during execution.",
+      "additionalProperties": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null",
+          "array",
+          "object"
+        ]
+      }
+    },
+    "iterator_expansions": {
+      "type": "array",
+      "description": "Resolved iterator values and expansions used by the engine.",
+      "items": {
+        "$ref": "#/$defs/iterator_expansion"
+      }
+    },
+    "collections": {
+      "type": "array",
+      "description": "Resolved collections and their member artefacts.",
+      "items": {
+        "$ref": "#/$defs/collection_record"
+      }
+    },
+    "execution_graph": {
+      "$ref": "#/$defs/execution_graph"
+    },
+    "execution_plan": {
+      "$ref": "#/$defs/execution_plan"
+    },
+    "artefacts": {
+      "type": "array",
+      "description": "All artefacts known to the execution, including inputs, intermediate outputs, final outputs, generated prompts, validation reports, generated modules and review decisions.",
+      "items": {
+        "$ref": "#/$defs/artefact_record"
+      }
+    },
+    "operations": {
+      "type": "array",
+      "description": "Concrete operation executions, including iterator-expanded operation instances.",
+      "items": {
+        "$ref": "#/$defs/operation_record"
+      }
+    },
+    "validation_results": {
+      "type": "array",
+      "description": "Run-level or artefact-level validation results.",
+      "items": {
+        "$ref": "#/$defs/validation_result"
+      }
+    },
+    "errors": {
+      "type": "array",
+      "description": "Run-level errors not already attached to a specific operation.",
+      "items": {
+        "$ref": "#/$defs/error_record"
+      }
+    },
+    "human_review_decisions": {
+      "type": "array",
+      "description": "Human review decisions made during execution.",
+      "items": {
+        "$ref": "#/$defs/human_review_decision"
+      }
+    },
+    "final_outputs": {
+      "type": "array",
+      "description": "Final outputs resolved from the root-level module output declaration.",
+      "items": {
+        "$ref": "#/$defs/artefact_ref"
+      }
+    },
+    "summary": {
+      "type": "object",
+      "description": "Optional human-readable and machine-readable execution summary.",
+      "additionalProperties": true,
+      "properties": {
+        "operation_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "successful_operation_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed_operation_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retry_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "validation_passed": {
+          "type": "boolean"
+        },
+        "semantic_validation_passed": {
+          "type": "boolean"
+        },
+        "human_review_required": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "status": {
+      "type": "string",
+      "description": "Execution status.",
+      "enum": [
+        "pending",
+        "running",
+        "succeeded",
+        "failed",
+        "partially_succeeded",
+        "cancelled",
+        "requires_review",
+        "semantically_failed",
+        "unknown"
+      ]
+    },
+    "timestamps": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "ended_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "run": {
+      "type": "object",
+      "description": "Execution run metadata.",
+      "additionalProperties": true,
+      "required": [
+        "run_id"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "string"
+        },
+        "parent_run_id": {
+          "type": "string",
+          "description": "Parent run identifier if this trace belongs to a submodule execution."
+        },
+        "root_run_id": {
+          "type": "string"
+        },
+        "run_type": {
+          "type": "string",
+          "enum": [
+            "module",
+            "submodule",
+            "dynamic_generated_module",
+            "validation",
+            "improvement",
+            "test",
+            "dry_run",
+            "unknown"
+          ]
+        },
+        "invocation_id": {
+          "type": "string"
+        },
+        "initiated_by": {
+          "type": "string",
+          "description": "User, system or parent operation that initiated the run."
+        },
+        "conformance_level": {
+          "type": "string",
+          "description": "Declared or detected engine conformance level, if defined."
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "description": "Source module information.",
+      "additionalProperties": true,
+      "required": [
+        "module_id",
+        "format"
+      ],
+      "properties": {
+        "module_id": {
+          "type": "string"
+        },
+        "module_version": {
+          "type": "string"
+        },
+        "module_path": {
+          "type": "string"
+        },
+        "module_uri": {
+          "type": "string",
+          "format": "uri-reference"
+        },
+        "format": {
+          "type": "string",
+          "description": "Source format used for the module.",
+          "examples": [
+            "TTML",
+            "YAML",
+            "JSON",
+            "VisualGraph"
+          ]
+        },
+        "format_version": {
+          "type": "string",
+          "description": "Version of the source format, e.g. TTML version."
+        },
+        "schema_uri": {
+          "type": "string",
+          "format": "uri-reference"
+        },
+        "schema_version": {
+          "type": "string"
+        },
+        "source_hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "project_metadata": {
+          "type": "object",
+          "description": "Project or module metadata parsed from the source definition.",
+          "additionalProperties": true,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "desc": {
+              "type": "string"
+            },
+            "author": {
+              "type": "string"
+            },
+            "date": {
+              "type": "string"
+            },
+            "genre": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "engine": {
+      "type": "object",
+      "description": "Cognitive Engine metadata.",
+      "additionalProperties": true,
+      "required": [
+        "engine_id",
+        "engine_version"
+      ],
+      "properties": {
+        "engine_id": {
+          "type": "string"
+        },
+        "engine_name": {
+          "type": "string"
+        },
+        "engine_version": {
+          "type": "string"
+        },
+        "implementation": {
+          "type": "string"
+        },
+        "runtime_environment": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "os": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string"
+            },
+            "language_version": {
+              "type": "string"
+            },
+            "host": {
+              "type": "string"
+            }
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "examples": [
+            [
+              "TextCompletion",
+              "ExecuteFunction",
+              "Collections",
+              "Iterators",
+              "SemanticContracts"
+            ]
+          ]
+        },
+        "registries": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "model_registry_version": {
+              "type": "string"
+            },
+            "function_registry_version": {
+              "type": "string"
+            },
+            "tool_registry_version": {
+              "type": "string"
+            },
+            "module_registry_version": {
+              "type": "string"
+            },
+            "contract_registry_version": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "workspace": {
+      "type": "object",
+      "description": "Workspace used to store or reference inputs, intermediate artefacts, outputs and trace data.",
+      "additionalProperties": true,
+      "required": [
+        "workspace_id"
+      ],
+      "properties": {
+        "workspace_id": {
+          "type": "string"
+        },
+        "workspace_type": {
+          "type": "string",
+          "enum": [
+            "local_directory",
+            "cloud_storage",
+            "database",
+            "in_memory",
+            "repository",
+            "hybrid",
+            "unknown"
+          ]
+        },
+        "root_uri": {
+          "type": "string",
+          "format": "uri-reference"
+        },
+        "input_uri": {
+          "type": "string",
+          "format": "uri-reference"
+        },
+        "intermediate_uri": {
+          "type": "string",
+          "format": "uri-reference"
+        },
+        "output_uri": {
+          "type": "string",
+          "format": "uri-reference"
+        },
+        "trace_uri": {
+          "type": "string",
+          "format": "uri-reference"
+        },
+        "retention_policy": {
+          "type": "string"
+        }
+      }
+    },
+    "hash": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "value"
+      ],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "examples": [
+            "sha256",
+            "sha512",
+            "md5"
+          ]
+        },
+        "value": {
+          "type": "string"
+        }
+      }
+    },
+    "artefact_ref": {
+      "type": "object",
+      "description": "Reference to a logical artefact/Data Unit.",
+      "additionalProperties": true,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Logical Data Unit or Collection identifier."
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "data_unit",
+            "collection",
+            "prompt",
+            "module",
+            "validation_report",
+            "error_report",
+            "human_review_decision",
+            "unknown"
+          ]
+        },
+        "version": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri-reference"
+        },
+        "hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "mime_type": {
+          "type": "string"
+        },
+        "extension": {
+          "type": "string"
+        },
+        "semantic_type": {
+          "type": "string"
+        },
+        "contract": {
+          "type": "string"
+        },
+        "validation_status": {
+          "type": "string",
+          "enum": [
+            "not_validated",
+            "passed",
+            "passed_with_warnings",
+            "failed",
+            "requires_review",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "artefact_record": {
+      "type": "object",
+      "description": "Detailed record for an artefact created, supplied or referenced during execution.",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "role"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "input",
+            "intermediate",
+            "final",
+            "generated_prompt",
+            "generated_module",
+            "validation_report",
+            "error_report",
+            "human_review_decision",
+            "execution_plan",
+            "execution_graph",
+            "other"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "data_unit",
+            "collection",
+            "prompt",
+            "module",
+            "report",
+            "decision",
+            "other",
+            "unknown"
+          ]
+        },
+        "version": {
+          "type": [
+            "string",
+            "integer"
+          ]
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri-reference"
+        },
+        "folder": {
+          "type": "string"
+        },
+        "extension": {
+          "type": "string"
+        },
+        "mime_type": {
+          "type": "string"
+        },
+        "semantic_type": {
+          "type": "string"
+        },
+        "contract": {
+          "type": "string"
+        },
+        "hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "produced_by": {
+          "type": "string",
+          "description": "Operation instance ID that produced this artefact."
+        },
+        "derived_from": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artefact_ref"
+          }
+        },
+        "validation_status": {
+          "type": "string",
+          "enum": [
+            "not_validated",
+            "passed",
+            "passed_with_warnings",
+            "failed",
+            "requires_review",
+            "unknown"
+          ]
+        },
+        "redaction": {
+          "$ref": "#/$defs/redaction"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "redaction": {
+      "type": "object",
+      "description": "Records whether content was omitted, truncated, redacted or externally referenced.",
+      "additionalProperties": true,
+      "properties": {
+        "content_included": {
+          "type": "boolean"
+        },
+        "redacted": {
+          "type": "boolean"
+        },
+        "redaction_reason": {
+          "type": "string"
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "external_reference_only": {
+          "type": "boolean"
+        }
+      }
+    },
+    "iterator_expansion": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "iterator_id",
+        "values"
+      ],
+      "properties": {
+        "iterator_id": {
+          "type": "string"
+        },
+        "from": {
+          "type": [
+            "string",
+            "number",
+            "integer"
+          ]
+        },
+        "to": {
+          "type": [
+            "string",
+            "number",
+            "integer"
+          ]
+        },
+        "step": {
+          "type": [
+            "number",
+            "integer"
+          ]
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "number",
+              "integer",
+              "boolean"
+            ]
+          }
+        },
+        "source_expression": {
+          "type": "string"
+        }
+      }
+    },
+    "collection_record": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "members"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "order_by": {
+          "type": "string"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artefact_ref"
+          }
+        },
+        "resolved_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "execution_graph": {
+      "type": "object",
+      "description": "Optional compiled cognitive transformation graph.",
+      "additionalProperties": true,
+      "properties": {
+        "graph_id": {
+          "type": "string"
+        },
+        "graph_hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/graph_node"
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/graph_edge"
+          }
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri-reference"
+        }
+      }
+    },
+    "graph_node": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "id",
+        "node_type"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "node_type": {
+          "type": "string",
+          "enum": [
+            "data_unit",
+            "operation",
+            "collection",
+            "module",
+            "contract",
+            "validation_gate",
+            "human_review_gate",
+            "other"
+          ]
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+    "graph_edge": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "from",
+        "to",
+        "relationship"
+      ],
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "relationship": {
+          "type": "string",
+          "enum": [
+            "uses",
+            "produces",
+            "depends_on",
+            "derived_from",
+            "reviews",
+            "revises",
+            "validates",
+            "aggregates",
+            "decomposes",
+            "implements",
+            "references",
+            "replaces",
+            "version_of",
+            "other"
+          ]
+        }
+      }
+    },
+    "execution_plan": {
+      "type": "object",
+      "description": "Optional execution plan produced by the Cognitive Engine before runtime execution.",
+      "additionalProperties": true,
+      "properties": {
+        "plan_id": {
+          "type": "string"
+        },
+        "plan_hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "dry_run": {
+          "type": "boolean"
+        },
+        "operation_instances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/operation_instance_plan"
+          }
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri-reference"
+        }
+      }
+    },
+    "operation_instance_plan": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "operation_instance_id",
+        "operation_id",
+        "operation_type"
+      ],
+      "properties": {
+        "operation_instance_id": {
+          "type": "string"
+        },
+        "operation_id": {
+          "type": "string"
+        },
+        "module_id": {
+          "type": "string"
+        },
+        "operation_type": {
+          "$ref": "#/$defs/operation_type"
+        },
+        "iterator_values": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "integer",
+              "boolean"
+            ]
+          }
+        },
+        "planned_inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artefact_ref"
+          }
+        },
+        "planned_outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artefact_ref"
+          }
+        },
+        "depends_on_operations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "parallelisable": {
+          "type": "boolean"
+        },
+        "requires_human_review": {
+          "type": "boolean"
+        }
+      }
+    },
+    "operation_type": {
+      "type": "string",
+      "enum": [
+        "TextCompletion",
+        "DynamicCompletion",
+        "ProjectCompletion",
+        "PreExisting",
+        "ExecuteFunction",
+        "HumanReview",
+        "ToolCall",
+        "ValidationGate",
+        "Condition",
+        "Loop",
+        "Unknown"
+      ]
+    },
+    "operation_record": {
+      "type": "object",
+      "description": "Execution record for a concrete operation instance.",
+      "additionalProperties": true,
+      "required": [
+        "operation_instance_id",
+        "operation_id",
+        "operation_type",
+        "status",
+        "timestamps"
+      ],
+      "properties": {
+        "operation_instance_id": {
+          "type": "string",
+          "description": "Concrete operation instance identifier after iterator expansion."
+        },
+        "operation_id": {
+          "type": "string",
+          "description": "Operation identifier from the source module."
+        },
+        "module_id": {
+          "type": "string"
+        },
+        "operation_type": {
+          "$ref": "#/$defs/operation_type"
+        },
+        "description": {
+          "type": "string",
+          "description": "Resolved operation description used for execution."
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "timestamps": {
+          "$ref": "#/$defs/timestamps"
+        },
+        "iterator_values": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "integer",
+              "boolean"
+            ]
+          }
+        },
+        "resolved_variables": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "integer",
+              "boolean",
+              "null",
+              "array",
+              "object"
+            ]
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artefact_ref"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artefact_ref"
+          }
+        },
+        "attempts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/operation_attempt"
+          }
+        },
+        "llm_call": {
+          "$ref": "#/$defs/llm_call"
+        },
+        "function_call": {
+          "$ref": "#/$defs/function_call"
+        },
+        "tool_calls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tool_call"
+          }
+        },
+        "submodule_execution": {
+          "$ref": "#/$defs/submodule_execution"
+        },
+        "dynamic_resolution": {
+          "$ref": "#/$defs/dynamic_resolution"
+        },
+        "human_review": {
+          "$ref": "#/$defs/human_review_decision"
+        },
+        "validation_results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/validation_result"
+          }
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/error_record"
+          }
+        },
+        "metrics": {
+          "$ref": "#/$defs/operation_metrics"
+        }
+      }
+    },
+    "operation_attempt": {
+      "type": "object",
+      "description": "One attempt to execute an operation instance. Retries should be represented as multiple attempts.",
+      "additionalProperties": true,
+      "required": [
+        "attempt_index",
+        "status"
+      ],
+      "properties": {
+        "attempt_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "status": {
+          "$ref": "#/$defs/status"
+        },
+        "timestamps": {
+          "$ref": "#/$defs/timestamps"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "llm_call": {
+          "$ref": "#/$defs/llm_call"
+        },
+        "function_call": {
+          "$ref": "#/$defs/function_call"
+        },
+        "tool_calls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/tool_call"
+          }
+        },
+        "validation_results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/validation_result"
+          }
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/error_record"
+          }
+        }
+      }
+    },
+    "llm_call": {
+      "type": "object",
+      "description": "LLM call information for semantic transformations.",
+      "additionalProperties": true,
+      "properties": {
+        "provider": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        },
+        "model_version": {
+          "type": "string"
+        },
+        "capability_profile": {
+          "type": "string",
+          "description": "Abstract capability requirement or model selection profile."
+        },
+        "settings": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "temperature": {
+              "type": "number"
+            },
+            "top_p": {
+              "type": "number"
+            },
+            "max_tokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "seed": {
+              "type": [
+                "integer",
+                "string"
+              ]
+            }
+          }
+        },
+        "system_prompt_ref": {
+          "$ref": "#/$defs/artefact_ref"
+        },
+        "prompt_ref": {
+          "$ref": "#/$defs/artefact_ref"
+        },
+        "prompt_hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "response_ref": {
+          "$ref": "#/$defs/artefact_ref"
+        },
+        "response_hash": {
+          "$ref": "#/$defs/hash"
+        },
+        "usage": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "input_tokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "output_tokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "total_tokens": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "estimated_cost": {
+              "type": "number",
+              "minimum": 0
+            },
+            "currency": {
+              "type": "string"
+            }
+          }
+        },
+        "redaction": {
+          "$ref": "#/$defs/redaction"
+        }
+      }
+    },
+    "function_call": {
+      "type": "object",
+      "description": "Deterministic function execution information.",
+      "additionalProperties": true,
+      "required": [
+        "function_name"
+      ],
+      "properties": {
+        "function_name": {
+          "type": "string"
+        },
+        "function_version": {
+          "type": "string"
+        },
+        "registry_ref": {
+          "type": "string"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artefact_ref"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artefact_ref"
+          }
+        },
+        "deterministic": {
+          "type": "boolean"
+        },
+        "side_effects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exit_code": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "stdout_ref": {
+          "$ref": "#/$defs/artefact_ref"
+        },
+        "stderr_ref": {
+          "$ref": "#/$defs/artefact_ref"
+        }
+      }
+    },
+    "tool_call": {
+      "type": "object",
+      "description": "External tool call information.",
+      "additionalProperties": true,
+      "required": [
+        "tool_name"
+      ],
+      "properties": {
+        "tool_name": {
+          "type": "string"
+        },
+        "tool_version": {
+          "type": "string"
+        },
+        "registry_ref": {
+          "type": "string"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artefact_ref"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/artefact_ref"
+          }
+        },
+        "side_effects": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "permissions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "request_ref": {
+          "$ref": "#/$defs/artefact_ref"
+        },
+        "response_ref": {
+          "$ref": "#/$defs/artefact_ref"
+        }
+      }
+    },
+    "submodule_execution": {
+      "type": "object",
+      "description": "Information about a submodule executed by this operation.",
+      "additionalProperties": true,
+      "properties": {
+        "target_module_id": {
+          "type": "string"
+        },
+        "target_module_version": {
+          "type": "string"
+        },
+        "target_module_uri": {
+          "type": "string",
+          "format": "uri-reference"
+        },
+        "submodule_run_id": {
+          "type": "string"
+        },
+        "submodule_trace_ref": {
+          "type": "string",
+          "description": "Reference to a nested execution trace."
+        },
+        "input_mapping": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "output_mapping": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "generated": {
+          "type": "boolean"
+        },
+        "generated_module_ref": {
+          "$ref": "#/$defs/artefact_ref"
+        }
+      }
+    },
+    "dynamic_resolution": {
+      "type": "object",
+      "description": "Resolution chosen for DynamicCompletion or ProjectCompletion operations.",
+      "additionalProperties": true,
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "direct_text_completion",
+            "execute_function",
+            "pre_existing_module",
+            "generated_submodule",
+            "tool_call",
+            "human_review",
+            "composite_plan",
+            "unknown"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "plan_ref": {
+          "$ref": "#/$defs/artefact_ref"
+        },
+        "generated_module_ref": {
+          "$ref": "#/$defs/artefact_ref"
+        },
+        "approved": {
+          "type": "boolean"
+        },
+        "approval_ref": {
+          "$ref": "#/$defs/artefact_ref"
+        },
+        "validation_results": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/validation_result"
+          }
+        }
+      }
+    },
+    "validation_result": {
+      "type": "object",
+      "description": "Validation result for schema, execution or semantic correctness.",
+      "additionalProperties": true,
+      "required": [
+        "validation_id",
+        "validation_type",
+        "outcome"
+      ],
+      "properties": {
+        "validation_id": {
+          "type": "string"
+        },
+        "validation_type": {
+          "type": "string",
+          "enum": [
+            "schema",
+            "execution",
+            "semantic",
+            "contract",
+            "structural",
+            "content",
+            "consistency",
+            "source_grounding",
+            "quality",
+            "downstream_readiness",
+            "human_approval",
+            "security",
+            "unknown"
+          ]
+        },
+        "target": {
+          "$ref": "#/$defs/artefact_ref"
+        },
+        "contract_id": {
+          "type": "string"
+        },
+        "contract_version": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "deterministic_function",
+            "llm_review",
+            "human_review",
+            "schema_validation",
+            "engine_validation",
+            "hybrid",
+            "unknown"
+          ]
+        },
+        "validator": {
+          "type": "string"
+        },
+        "validator_version": {
+          "type": "string"
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "passed",
+            "passed_with_warnings",
+            "failed",
+            "requires_review",
+            "skipped",
+            "unknown"
+          ]
+        },
+        "score": {
+          "type": "number"
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/error_record"
+          }
+        },
+        "report_ref": {
+          "$ref": "#/$defs/artefact_ref"
+        },
+        "validated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "error_record": {
+      "type": "object",
+      "description": "Error or failure encountered during compilation, execution, validation or output resolution.",
+      "additionalProperties": true,
+      "required": [
+        "error_id",
+        "error_type",
+        "message"
+      ],
+      "properties": {
+        "error_id": {
+          "type": "string"
+        },
+        "error_type": {
+          "type": "string",
+          "enum": [
+            "invalid_source_syntax",
+            "schema_validation_failure",
+            "missing_input",
+            "unresolved_reference",
+            "invalid_variable",
+            "invalid_iterator",
+            "output_collision",
+            "missing_function",
+            "missing_submodule",
+            "model_unavailable",
+            "llm_api_failure",
+            "malformed_llm_output",
+            "tool_call_failure",
+            "permission_error",
+            "storage_error",
+            "semantic_validation_failure",
+            "contract_failure",
+            "human_rejection",
+            "final_output_resolution_failure",
+            "unknown"
+          ]
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "info",
+            "warning",
+            "error",
+            "fatal"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "module_id": {
+          "type": "string"
+        },
+        "operation_id": {
+          "type": "string"
+        },
+        "operation_instance_id": {
+          "type": "string"
+        },
+        "artefact_id": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "recovered": {
+          "type": "boolean"
+        },
+        "recovery_action": {
+          "type": "string"
+        },
+        "diagnostic_ref": {
+          "$ref": "#/$defs/artefact_ref"
+        }
+      }
+    },
+    "human_review_decision": {
+      "type": "object",
+      "description": "Human review, approval, rejection or edit decision.",
+      "additionalProperties": true,
+      "required": [
+        "review_id",
+        "decision"
+      ],
+      "properties": {
+        "review_id": {
+          "type": "string"
+        },
+        "reviewer_id": {
+          "type": "string"
+        },
+        "reviewer_role": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/artefact_ref"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "approved",
+            "approved_with_changes",
+            "rejected",
+            "requires_revision",
+            "deferred",
+            "unknown"
+          ]
+        },
+        "comments": {
+          "type": "string"
+        },
+        "changes_made": {
+          "type": "boolean"
+        },
+        "changed_artefact_ref": {
+          "$ref": "#/$defs/artefact_ref"
+        },
+        "decided_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "operation_metrics": {
+      "type": "object",
+      "description": "Operation-level timing, cost and resource metrics.",
+      "additionalProperties": true,
+      "properties": {
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retry_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "estimated_cost": {
+          "type": "number",
+          "minimum": 0
+        },
+        "currency": {
+          "type": "string"
+        },
+        "input_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "output_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_tokens": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

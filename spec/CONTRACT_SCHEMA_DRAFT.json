@@ -1,0 +1,1303 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://thoughttree-framework.org/spec/CONTRACT_SCHEMA_DRAFT.json",
+  "title": "Thought Tree Semantic Contract Schema Draft",
+  "description": "Draft JSON Schema for declaring reusable Thought Tree semantic contracts. A semantic contract defines the expected meaning, structure, quality, validation behaviour and review requirements for a Thought Tree Data Unit, Operation output, Operation, Module or other cognitive artefact.",
+  "type": "object",
+  "required": [
+    "kind",
+    "schemaVersion",
+    "contracts"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "kind": {
+      "const": "ThoughtTreeContractSet",
+      "description": "Identifies this document as a Thought Tree contract set."
+    },
+    "schemaVersion": {
+      "type": "string",
+      "description": "Version of this contract schema draft used by the document.",
+      "examples": [
+        "0.1.0-draft"
+      ]
+    },
+    "metadata": {
+      "$ref": "#/$defs/documentMetadata"
+    },
+    "imports": {
+      "type": "array",
+      "description": "Optional external contract, semantic type or validator registries imported by this contract set.",
+      "items": {
+        "$ref": "#/$defs/importReference"
+      },
+      "default": []
+    },
+    "contracts": {
+      "type": "array",
+      "description": "Reusable semantic contracts declared in this document.",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/contract"
+      }
+    },
+    "extensions": {
+      "$ref": "#/$defs/extensions"
+    }
+  },
+  "$defs": {
+    "identifier": {
+      "type": "string",
+      "description": "Stable logical identifier. Intended to be human-readable and usable in TTML or future Thought Tree source formats.",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_.:-]*$",
+      "examples": [
+        "PlotOutlineContract",
+        "TechnicalRequirementsRegisterContract",
+        "ReviewNarrativeCompleteness"
+      ]
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic or project-local version string.",
+      "examples": [
+        "0.1.0",
+        "1.0.0",
+        "2026-06-27"
+      ]
+    },
+    "documentMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "description": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "license": {
+          "type": "string"
+        },
+        "tags": {
+          "$ref": "#/$defs/tags"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "importReference": {
+      "type": "object",
+      "required": [
+        "kind",
+        "ref"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "contract_set",
+            "contract",
+            "semantic_type_registry",
+            "validator_registry",
+            "function_registry",
+            "module_registry"
+          ]
+        },
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "ref": {
+          "type": "string",
+          "description": "Path, URI, registry locator or implementation-specific reference."
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "required": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "contract": {
+      "type": "object",
+      "required": [
+        "id",
+        "semanticType",
+        "appliesTo",
+        "strictness"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "$ref": "#/$defs/version"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "experimental",
+            "stable",
+            "deprecated"
+          ],
+          "default": "draft"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable explanation of what this contract guarantees or expects."
+        },
+        "semanticType": {
+          "$ref": "#/$defs/identifier",
+          "description": "The conceptual type this contract validates, such as PlotOutline, RequirementsRegister or TechnicalDesignDocument."
+        },
+        "appliesTo": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Kinds of Thought Tree entities this contract may be attached to.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "data_unit",
+              "operation_output",
+              "operation",
+              "module",
+              "collection",
+              "generated_module",
+              "execution_trace"
+            ]
+          }
+        },
+        "target": {
+          "$ref": "#/$defs/contractTarget"
+        },
+        "strictness": {
+          "$ref": "#/$defs/strictness"
+        },
+        "representation": {
+          "$ref": "#/$defs/representationRequirements"
+        },
+        "structure": {
+          "$ref": "#/$defs/structureRequirements"
+        },
+        "content": {
+          "$ref": "#/$defs/contentRequirements"
+        },
+        "quality": {
+          "$ref": "#/$defs/qualityRequirements"
+        },
+        "traceability": {
+          "$ref": "#/$defs/traceabilityRequirements"
+        },
+        "operation": {
+          "$ref": "#/$defs/operationContract"
+        },
+        "validation": {
+          "$ref": "#/$defs/validationPolicy"
+        },
+        "onFailure": {
+          "$ref": "#/$defs/failurePolicy"
+        },
+        "versioning": {
+          "$ref": "#/$defs/versioningPolicy"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/contractExample"
+          },
+          "default": []
+        },
+        "tags": {
+          "$ref": "#/$defs/tags"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "contractTarget": {
+      "type": "object",
+      "description": "Optional binding to a specific Data Unit, Operation, Module or other entity. If omitted, the contract is reusable by semantic type.",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "data_unit",
+            "operation_output",
+            "operation",
+            "module",
+            "collection",
+            "semantic_type"
+          ]
+        },
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "path": {
+          "type": "string",
+          "description": "Optional path-like selector, useful for structured artefacts or future source formats."
+        }
+      }
+    },
+    "strictness": {
+      "type": "string",
+      "description": "Controls how validation failure affects execution.",
+      "enum": [
+        "advisory",
+        "warning",
+        "required",
+        "approval_required"
+      ],
+      "examples": [
+        "required"
+      ]
+    },
+    "representationRequirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "physicalFormats": {
+          "type": "array",
+          "description": "Permitted logical or file-level formats.",
+          "items": {
+            "type": "string",
+            "examples": [
+              "txt",
+              "md",
+              "json",
+              "xml",
+              "pdf"
+            ]
+          },
+          "default": []
+        },
+        "mimeTypes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "examples": [
+              "text/plain",
+              "text/markdown",
+              "application/json"
+            ]
+          },
+          "default": []
+        },
+        "encoding": {
+          "type": "string",
+          "examples": [
+            "UTF-8"
+          ]
+        },
+        "schemaRef": {
+          "type": "string",
+          "description": "Optional JSON Schema, XML Schema, Markdown profile or other structural schema reference."
+        },
+        "mustBeParseable": {
+          "type": "boolean",
+          "description": "Whether the artefact must parse as its declared format.",
+          "default": true
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "structureRequirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requiredSections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sectionRequirement"
+          },
+          "default": []
+        },
+        "optionalSections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sectionRequirement"
+          },
+          "default": []
+        },
+        "requiredFields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fieldRequirement"
+          },
+          "default": []
+        },
+        "requiredRelationships": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/relationshipRequirement"
+          },
+          "default": []
+        },
+        "ordering": {
+          "type": "string",
+          "enum": [
+            "not_specified",
+            "recommended",
+            "required"
+          ],
+          "default": "not_specified"
+        },
+        "minimumLength": {
+          "$ref": "#/$defs/lengthConstraint"
+        },
+        "maximumLength": {
+          "$ref": "#/$defs/lengthConstraint"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "sectionRequirement": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "required": {
+          "type": "boolean",
+          "default": true
+        },
+        "minOccurrences": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 1
+        },
+        "maxOccurrences": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "criteria": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "default": []
+        }
+      }
+    },
+    "fieldRequirement": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "valueType": {
+          "type": "string",
+          "enum": [
+            "string",
+            "integer",
+            "number",
+            "boolean",
+            "object",
+            "array",
+            "any"
+          ],
+          "default": "string"
+        },
+        "required": {
+          "type": "boolean",
+          "default": true
+        },
+        "allowedValues": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "number",
+              "integer",
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Regular expression used when valueType is string."
+        },
+        "minItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maxItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "criteria": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "default": []
+        }
+      }
+    },
+    "relationshipRequirement": {
+      "type": "object",
+      "required": [
+        "relationship"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "relationship": {
+          "type": "string",
+          "enum": [
+            "depends_on",
+            "derived_from",
+            "reviews",
+            "revises",
+            "validates",
+            "aggregates",
+            "decomposes",
+            "implements",
+            "references",
+            "replaces",
+            "version_of",
+            "traceable_to"
+          ]
+        },
+        "targetSemanticType": {
+          "$ref": "#/$defs/identifier"
+        },
+        "targetId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "required": {
+          "type": "boolean",
+          "default": true
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "lengthConstraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "unit": {
+          "type": "string",
+          "enum": [
+            "characters",
+            "words",
+            "tokens",
+            "lines",
+            "sections",
+            "items"
+          ]
+        },
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "contentRequirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "completenessCriteria": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "default": []
+        },
+        "consistencyCriteria": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "default": []
+        },
+        "sourceGroundingCriteria": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "default": []
+        },
+        "prohibitedContent": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/prohibitedContentRule"
+          },
+          "default": []
+        },
+        "requiredDistinctions": {
+          "type": "array",
+          "description": "Conceptual distinctions that must be preserved in the output.",
+          "items": {
+            "type": "string",
+            "examples": [
+              "explicit_vs_inferred_vs_unresolved",
+              "fact_vs_assumption",
+              "source_supported_vs_unsupported"
+            ]
+          },
+          "default": []
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "qualityRequirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "qualityCriteria": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "default": []
+        },
+        "downstreamReadinessCriteria": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/criterion"
+          },
+          "default": []
+        },
+        "scoring": {
+          "$ref": "#/$defs/scoringPolicy"
+        },
+        "minimumAcceptableScore": {
+          "type": "number",
+          "minimum": 0
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "criterion": {
+      "type": "object",
+      "required": [
+        "description"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "description": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "required": {
+          "type": "boolean",
+          "default": true
+        },
+        "weight": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Optional relative weight used by scoring validators."
+        },
+        "evidenceExpected": {
+          "type": "boolean",
+          "description": "Whether the validator should provide evidence for this criterion.",
+          "default": false
+        },
+        "tags": {
+          "$ref": "#/$defs/tags"
+        }
+      }
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "info",
+        "warning",
+        "error",
+        "critical"
+      ],
+      "default": "error"
+    },
+    "prohibitedContentRule": {
+      "type": "object",
+      "required": [
+        "description"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "description": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Optional regular expression for deterministic detection."
+        }
+      }
+    },
+    "traceabilityRequirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requiresSourceTraceability": {
+          "type": "boolean",
+          "default": false
+        },
+        "sourceReferenceFormat": {
+          "type": "string",
+          "description": "Expected citation, source identifier or traceability format."
+        },
+        "claimClassificationRequired": {
+          "type": "boolean",
+          "description": "Whether claims must be classified, for example as explicit, inferred, assumption or unresolved.",
+          "default": false
+        },
+        "allowedClaimClasses": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "examples": [
+              "explicit",
+              "inferred",
+              "assumption",
+              "unresolved"
+            ]
+          },
+          "default": []
+        },
+        "mustRecordInputIds": {
+          "type": "boolean",
+          "default": true
+        },
+        "mustRecordProducingOperation": {
+          "type": "boolean",
+          "default": true
+        },
+        "mustRecordValidationResult": {
+          "type": "boolean",
+          "default": true
+        },
+        "mustRecordHumanApproval": {
+          "type": "boolean",
+          "default": false
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "operationContract": {
+      "type": "object",
+      "description": "Optional precondition and postcondition requirements for contracts attached to Operations or operation outputs.",
+      "additionalProperties": false,
+      "properties": {
+        "preconditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          },
+          "default": []
+        },
+        "postconditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/condition"
+          },
+          "default": []
+        },
+        "requiredInputSemanticTypes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/semanticTypeRequirement"
+          },
+          "default": []
+        },
+        "requiredOutputSemanticTypes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/semanticTypeRequirement"
+          },
+          "default": []
+        },
+        "reviewRequiredBeforeExecution": {
+          "type": "boolean",
+          "default": false
+        },
+        "reviewRequiredAfterExecution": {
+          "type": "boolean",
+          "default": false
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "condition": {
+      "type": "object",
+      "required": [
+        "description"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "description": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "validator": {
+          "$ref": "#/$defs/validatorReference"
+        }
+      }
+    },
+    "semanticTypeRequirement": {
+      "type": "object",
+      "required": [
+        "semanticType"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "semanticType": {
+          "$ref": "#/$defs/identifier"
+        },
+        "contract": {
+          "$ref": "#/$defs/identifier"
+        },
+        "required": {
+          "type": "boolean",
+          "default": true
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "validationPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "validationStages": {
+          "type": "array",
+          "description": "Stages at which this contract should be evaluated.",
+          "items": {
+            "type": "string",
+            "enum": [
+              "pre_execution",
+              "post_operation",
+              "before_downstream_use",
+              "final_output",
+              "manual_review",
+              "module_import",
+              "module_publication"
+            ]
+          },
+          "default": [
+            "post_operation"
+          ]
+        },
+        "validators": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/validatorReference"
+          },
+          "default": []
+        },
+        "requiredOutcomes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/validationOutcome"
+          },
+          "default": [
+            "pass"
+          ]
+        },
+        "allowPassWithWarnings": {
+          "type": "boolean",
+          "default": false
+        },
+        "humanApproval": {
+          "$ref": "#/$defs/humanApprovalPolicy"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "validatorReference": {
+      "type": "object",
+      "required": [
+        "type",
+        "id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "machine",
+            "schema",
+            "function",
+            "llm_review",
+            "module",
+            "human_review",
+            "tool"
+          ]
+        },
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "ref": {
+          "type": "string",
+          "description": "Optional URI, path, function name, module ID, registry reference or tool locator."
+        },
+        "description": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean",
+          "default": true
+        },
+        "capabilityRequirements": {
+          "type": "array",
+          "description": "Model, engine, function or tool capabilities required by this validator.",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        },
+        "inputs": {
+          "type": "array",
+          "description": "Logical input names expected by this validator.",
+          "items": {
+            "$ref": "#/$defs/identifier"
+          },
+          "default": []
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Validator-specific parameters.",
+          "additionalProperties": true,
+          "default": {}
+        }
+      }
+    },
+    "validationOutcome": {
+      "type": "string",
+      "enum": [
+        "pass",
+        "pass_with_warnings",
+        "fail_retry",
+        "fail_request_review",
+        "fail_terminal"
+      ]
+    },
+    "humanApprovalPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "required": {
+          "type": "boolean",
+          "default": false
+        },
+        "reason": {
+          "type": "string"
+        },
+        "reviewerRole": {
+          "type": "string",
+          "examples": [
+            "human_reviewer",
+            "domain_expert",
+            "compliance_officer",
+            "technical_lead"
+          ]
+        },
+        "mustRecordReviewerIdentity": {
+          "type": "boolean",
+          "default": true
+        },
+        "allowedDecisions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "approve",
+              "approve_with_warnings",
+              "reject",
+              "request_changes",
+              "escalate"
+            ]
+          },
+          "default": [
+            "approve",
+            "reject",
+            "request_changes"
+          ]
+        }
+      }
+    },
+    "failurePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "actions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/failureAction"
+          },
+          "default": []
+        },
+        "maxRetries": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 0
+        },
+        "preserveFailedOutput": {
+          "type": "boolean",
+          "default": true
+        },
+        "createDiagnosticArtifact": {
+          "type": "boolean",
+          "default": true
+        },
+        "diagnosticOutputId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "failureAction": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "retry_operation",
+            "repair_output",
+            "run_review_module",
+            "run_validation_module",
+            "deterministic_correction",
+            "request_human_review",
+            "create_diagnostic_artifact",
+            "continue_with_warning",
+            "abort_execution"
+          ]
+        },
+        "description": {
+          "type": "string"
+        },
+        "targetModule": {
+          "$ref": "#/$defs/identifier"
+        },
+        "targetFunction": {
+          "$ref": "#/$defs/identifier"
+        },
+        "requiresHumanApproval": {
+          "type": "boolean",
+          "default": false
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": true,
+          "default": {}
+        }
+      }
+    },
+    "versioningPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "preserveVersions": {
+          "type": "boolean",
+          "default": true
+        },
+        "preserveFailedVersions": {
+          "type": "boolean",
+          "default": true
+        },
+        "overwriteAllowed": {
+          "type": "boolean",
+          "default": false
+        },
+        "versionNamingPattern": {
+          "type": "string",
+          "description": "Optional naming pattern for versioned artefacts.",
+          "examples": [
+            "{{id}}.v{{version}}.{{extension}}"
+          ]
+        }
+      }
+    },
+    "scoringPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "scale": {
+          "type": "string",
+          "enum": [
+            "0-1",
+            "0-5",
+            "0-10",
+            "0-100"
+          ],
+          "default": "0-1"
+        },
+        "aggregation": {
+          "type": "string",
+          "enum": [
+            "minimum",
+            "maximum",
+            "average",
+            "weighted_average",
+            "all_required_must_pass"
+          ],
+          "default": "all_required_must_pass"
+        }
+      }
+    },
+    "contractExample": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "valid": {
+          "type": "boolean"
+        },
+        "contentRef": {
+          "type": "string",
+          "description": "Path, URI or identifier for an example artefact."
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true,
+      "default": []
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Implementation-specific extension data. Consumers should ignore unrecognised extension keys unless operating in strict mode.",
+      "additionalProperties": true,
+      "default": {}
+    }
+  },
+  "examples": [
+    {
+      "kind": "ThoughtTreeContractSet",
+      "schemaVersion": "0.1.0-draft",
+      "metadata": {
+        "id": "ExampleContractSet",
+        "name": "Example Thought Tree Contract Set",
+        "version": "0.1.0",
+        "description": "Example semantic contracts for early Thought Tree workflows."
+      },
+      "contracts": [
+        {
+          "id": "PlotOutlineContract",
+          "name": "Plot Outline Contract",
+          "version": "0.1.0",
+          "status": "draft",
+          "semanticType": "PlotOutline",
+          "appliesTo": [
+            "data_unit",
+            "operation_output"
+          ],
+          "strictness": "required",
+          "representation": {
+            "physicalFormats": [
+              "md",
+              "txt"
+            ],
+            "mimeTypes": [
+              "text/markdown",
+              "text/plain"
+            ],
+            "mustBeParseable": true
+          },
+          "structure": {
+            "requiredSections": [
+              {
+                "name": "Premise"
+              },
+              {
+                "name": "Main Characters"
+              },
+              {
+                "name": "Setting"
+              },
+              {
+                "name": "Central Conflict"
+              },
+              {
+                "name": "Act I"
+              },
+              {
+                "name": "Act II"
+              },
+              {
+                "name": "Act III"
+              },
+              {
+                "name": "Climax"
+              },
+              {
+                "name": "Resolution"
+              },
+              {
+                "name": "Unresolved Questions",
+                "required": false
+              }
+            ]
+          },
+          "quality": {
+            "qualityCriteria": [
+              {
+                "description": "The outline is consistent with the source story requirements.",
+                "severity": "critical"
+              },
+              {
+                "description": "The protagonist motivation is explicit.",
+                "severity": "error"
+              },
+              {
+                "description": "The central conflict escalates across the story.",
+                "severity": "error"
+              },
+              {
+                "description": "The climax resolves the primary conflict.",
+                "severity": "error"
+              },
+              {
+                "description": "The outline is detailed enough to support chapter drafting.",
+                "severity": "error"
+              }
+            ]
+          },
+          "validation": {
+            "enabled": true,
+            "validationStages": [
+              "post_operation",
+              "before_downstream_use"
+            ],
+            "validators": [
+              {
+                "type": "function",
+                "id": "ValidateRequiredMarkdownSections",
+                "ref": "ValidateRequiredMarkdownSections"
+              },
+              {
+                "type": "llm_review",
+                "id": "ReviewNarrativeCompleteness"
+              }
+            ],
+            "allowPassWithWarnings": false
+          },
+          "onFailure": {
+            "actions": [
+              {
+                "type": "repair_output",
+                "description": "Revise the failed plot outline using the validation report."
+              },
+              {
+                "type": "request_human_review",
+                "description": "Escalate if automatic repair does not satisfy the contract."
+              }
+            ],
+            "maxRetries": 2,
+            "preserveFailedOutput": true,
+            "createDiagnosticArtifact": true
+          }
+        }
+      ]
+    }
+  ]
+}

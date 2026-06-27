@@ -1,0 +1,596 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Thought Tree Markup Language — TTML Schema
+
+  Draft schema for the Thought Tree Framework handoff release.
+
+  Purpose:
+    This XSD validates the structural shape of a TTML document:
+      - root TTML element
+      - project metadata
+      - inputs
+      - variables
+      - iterators
+      - collections
+      - operations
+      - outputs
+      - optional draft semantic contracts
+
+  Important:
+    This schema only validates schema correctness.
+
+    It does not validate:
+      - whether FileRef values resolve;
+      - whether CollectionRef values resolve;
+      - whether iterator expansion is safe;
+      - whether output collisions occur;
+      - whether functions exist;
+      - whether submodule targets exist;
+      - whether outputs satisfy semantic contracts;
+      - whether a workflow is well-designed.
+
+    Those checks belong to Cognitive Engine execution validation
+    and semantic validation.
+
+  TTML version targeted:
+    Draft 0.12.x
+
+  Namespace:
+    This draft schema intentionally uses no target namespace so that
+    simple TTML documents can use:
+
+      xsi:noNamespaceSchemaLocation="TTMLSchema.xsd"
+
+  Status:
+    Draft / handoff / not production-stable.
+-->
+
+<xs:schema
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  elementFormDefault="unqualified"
+  attributeFormDefault="unqualified"
+  version="0.12.0">
+
+  <!-- ========================================================= -->
+  <!-- Simple Types                                               -->
+  <!-- ========================================================= -->
+
+  <xs:simpleType name="TTMLVersionType">
+    <xs:annotation>
+      <xs:documentation>
+        TTML schema/version identifier. Examples: 0.12.0, 1.0.0, 1.0.0-alpha.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9]+(\.[0-9]+){0,2}(-[A-Za-z0-9_.-]+)?"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="NonEmptyString">
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="IdentifierType">
+    <xs:annotation>
+      <xs:documentation>
+        Logical identifier for TTML objects.
+
+        This is intentionally more permissive than xs:ID because TTML identifiers
+        may contain iterator placeholders such as:
+
+          draft_chapter_{{ChapterIterator}}
+
+        Engines should apply additional identifier rules if needed.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1"/>
+      <xs:pattern value="\S+"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="VariableTypeName">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="string"/>
+      <xs:enumeration value="integer"/>
+      <xs:enumeration value="decimal"/>
+      <xs:enumeration value="boolean"/>
+      <xs:enumeration value="path"/>
+      <xs:enumeration value="uri"/>
+      <xs:enumeration value="json"/>
+      <xs:enumeration value="xml"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="OperationTypeName">
+    <xs:annotation>
+      <xs:documentation>
+        Core TTML operation types.
+
+        TextCompletion:
+          LLM-based semantic transformation.
+
+        ExecuteFunction:
+          Deterministic function call.
+
+        PreExisting:
+          Execute an existing module.
+
+        ProjectCompletion:
+          Generate or expand into a submodule for a complex task.
+
+        DynamicCompletion:
+          Let the Cognitive Engine choose an execution strategy.
+
+        HumanReview:
+          Included as an experimental draft type, reflecting the framework's
+          described human-review execution backend. Engines may choose not to
+          support it at basic conformance levels.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="TextCompletion"/>
+      <xs:enumeration value="ExecuteFunction"/>
+      <xs:enumeration value="PreExisting"/>
+      <xs:enumeration value="ProjectCompletion"/>
+      <xs:enumeration value="DynamicCompletion"/>
+      <xs:enumeration value="HumanReview"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ValidationMode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="none"/>
+      <xs:enumeration value="advisory"/>
+      <xs:enumeration value="warning"/>
+      <xs:enumeration value="required"/>
+      <xs:enumeration value="approval_required"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ContractStrictness">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="advisory"/>
+      <xs:enumeration value="warning"/>
+      <xs:enumeration value="required"/>
+      <xs:enumeration value="approval_required"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- ========================================================= -->
+  <!-- Root Element                                               -->
+  <!-- ========================================================= -->
+
+  <xs:element name="TTML">
+    <xs:annotation>
+      <xs:documentation>
+        Root element for a Thought Tree Markup Language module.
+
+        A TTML document represents one Thought Tree Module: a reusable
+        cognitive program made of inputs, variables, iterators, collections,
+        operations and final outputs.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Project" type="ProjectType"/>
+        <xs:element name="Inputs" type="InputsType" minOccurs="0"/>
+        <xs:element name="Vars" type="VarsType" minOccurs="0"/>
+        <xs:element name="Iterators" type="IteratorsType" minOccurs="0"/>
+        <xs:element name="Collections" type="CollectionsType" minOccurs="0"/>
+        <xs:element name="Contracts" type="ContractsType" minOccurs="0"/>
+        <xs:element name="Operations" type="OperationsType"/>
+        <xs:element ref="Output"/>
+      </xs:sequence>
+
+      <xs:attribute name="version" type="TTMLVersionType" use="required"/>
+
+      <!-- Allows xsi:noNamespaceSchemaLocation and future namespaced extensions. -->
+      <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- ========================================================= -->
+  <!-- Project Metadata                                           -->
+  <!-- ========================================================= -->
+
+  <xs:complexType name="ProjectType">
+    <xs:annotation>
+      <xs:documentation>
+        Metadata describing the module.
+
+        The id should identify the module. The desc should describe the
+        cognitive transformation performed by the module.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="id" type="IdentifierType" use="required"/>
+    <xs:attribute name="desc" type="xs:string" use="optional"/>
+    <xs:attribute name="genre" type="xs:string" use="optional"/>
+    <xs:attribute name="author" type="xs:string" use="optional"/>
+    <xs:attribute name="date" type="xs:string" use="optional"/>
+    <xs:attribute name="schemaVersion" type="xs:string" use="optional"/>
+    <xs:attribute name="intendedUse" type="xs:string" use="optional"/>
+    <xs:attribute name="requiredCapabilities" type="xs:string" use="optional"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- ========================================================= -->
+  <!-- Inputs                                                     -->
+  <!-- ========================================================= -->
+
+  <xs:complexType name="InputsType">
+    <xs:annotation>
+      <xs:documentation>
+        Declares root-level input Data Units required before execution begins.
+
+        Current TTML represents Data Units primarily as files.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element ref="File" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ========================================================= -->
+  <!-- Variables                                                  -->
+  <!-- ========================================================= -->
+
+  <xs:complexType name="VarsType">
+    <xs:sequence>
+      <xs:element name="Var" type="VarType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="VarType">
+    <xs:annotation>
+      <xs:documentation>
+        A named value available to the module.
+
+        Variables may be referenced using double braces, for example:
+
+          {{ChapterCount}}
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="name" type="IdentifierType" use="required"/>
+    <xs:attribute name="type" type="VariableTypeName" use="optional" default="string"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+    <xs:attribute name="desc" type="xs:string" use="optional"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- ========================================================= -->
+  <!-- Iterators                                                  -->
+  <!-- ========================================================= -->
+
+  <xs:complexType name="IteratorsType">
+    <xs:sequence>
+      <xs:element name="Iterator" type="IteratorType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="IteratorType">
+    <xs:annotation>
+      <xs:documentation>
+        Defines a repeated execution range or set.
+
+        Typical form:
+
+          &lt;Iterator id="ChapterIterator" from="1" to="{{ChapterCount}}"/&gt;
+
+        Engines are responsible for resolving variables and expanding iterator
+        values before execution.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="id" type="IdentifierType" use="required"/>
+    <xs:attribute name="from" type="xs:string" use="optional"/>
+    <xs:attribute name="to" type="xs:string" use="optional"/>
+    <xs:attribute name="step" type="xs:string" use="optional"/>
+    <xs:attribute name="values" type="xs:string" use="optional"/>
+    <xs:attribute name="desc" type="xs:string" use="optional"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- ========================================================= -->
+  <!-- Collections                                                -->
+  <!-- ========================================================= -->
+
+  <xs:complexType name="CollectionsType">
+    <xs:sequence>
+      <xs:element ref="Collection" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="Collection" type="CollectionType"/>
+
+  <xs:complexType name="CollectionType">
+    <xs:annotation>
+      <xs:documentation>
+        A named group of Data Units.
+
+        Collections allow many artefacts to be passed as one logical input,
+        without forcing the consuming operation to execute once per member.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element ref="FileRef"/>
+      <xs:element ref="CollectionRef"/>
+      <xs:element ref="File"/>
+    </xs:choice>
+
+    <xs:attribute name="id" type="IdentifierType" use="required"/>
+    <xs:attribute name="orderBy" type="IdentifierType" use="optional"/>
+    <xs:attribute name="desc" type="xs:string" use="optional"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:element name="CollectionRef" type="CollectionRefType"/>
+
+  <xs:complexType name="CollectionRefType">
+    <xs:annotation>
+      <xs:documentation>
+        Reference to a declared Collection.
+
+        Resolution of the referenced collection is performed by the Cognitive Engine.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="id" type="IdentifierType" use="required"/>
+    <xs:attribute name="role" type="xs:string" use="optional"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- ========================================================= -->
+  <!-- Operations                                                 -->
+  <!-- ========================================================= -->
+
+  <xs:complexType name="OperationsType">
+    <xs:sequence>
+      <xs:element name="Operation" type="OperationType" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="OperationType">
+    <xs:annotation>
+      <xs:documentation>
+        An executable transformation from input Data Units / Collections to
+        output Data Units / Collections.
+
+        The operation description is semantically important. For TextCompletion
+        operations, engines will typically use desc as part of the LLM instruction.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="FileRef"/>
+        <xs:element ref="CollectionRef"/>
+        <xs:element name="Param" type="ParamType"/>
+      </xs:choice>
+      <xs:element ref="Output"/>
+    </xs:sequence>
+
+    <xs:attribute name="id" type="IdentifierType" use="required"/>
+    <xs:attribute name="type" type="OperationTypeName" use="required"/>
+    <xs:attribute name="desc" type="xs:string" use="required"/>
+
+    <!-- Used by ExecuteFunction operations. -->
+    <xs:attribute name="function" type="IdentifierType" use="optional"/>
+
+    <!-- Used by PreExisting operations or engine-specific module calls. -->
+    <xs:attribute name="target" type="xs:string" use="optional"/>
+
+    <!-- Draft / future-facing attributes. -->
+    <xs:attribute name="validation" type="ValidationMode" use="optional"/>
+    <xs:attribute name="contract" type="IdentifierType" use="optional"/>
+    <xs:attribute name="semanticType" type="IdentifierType" use="optional"/>
+    <xs:attribute name="modelRequirement" type="xs:string" use="optional"/>
+    <xs:attribute name="capabilityRequirement" type="xs:string" use="optional"/>
+    <xs:attribute name="riskLevel" type="xs:string" use="optional"/>
+    <xs:attribute name="costLimit" type="xs:string" use="optional"/>
+
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="ParamType">
+    <xs:annotation>
+      <xs:documentation>
+        Optional operation parameter.
+
+        This is a draft convenience element for engine-specific settings,
+        function arguments, tool parameters or prompt controls.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="name" type="IdentifierType" use="required"/>
+    <xs:attribute name="value" type="xs:string" use="required"/>
+    <xs:attribute name="type" type="xs:string" use="optional"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- ========================================================= -->
+  <!-- Data Units                                                 -->
+  <!-- ========================================================= -->
+
+  <xs:element name="File" type="FileType"/>
+
+  <xs:complexType name="FileType">
+    <xs:annotation>
+      <xs:documentation>
+        Declares a logical Data Unit currently represented as a file.
+
+        id is the logical Data Unit identifier. It is not necessarily a literal
+        filesystem path.
+
+        folder and extension help an engine map the logical Data Unit to a
+        concrete workspace asset.
+
+        semanticType and contract are draft/future-facing attributes for semantic
+        validation.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:attribute name="id" type="IdentifierType" use="required"/>
+    <xs:attribute name="folder" type="xs:string" use="optional"/>
+    <xs:attribute name="extension" type="xs:string" use="optional"/>
+
+    <!-- Draft / future-facing metadata. -->
+    <xs:attribute name="mimeType" type="xs:string" use="optional"/>
+    <xs:attribute name="semanticType" type="IdentifierType" use="optional"/>
+    <xs:attribute name="contract" type="IdentifierType" use="optional"/>
+    <xs:attribute name="version" type="xs:string" use="optional"/>
+    <xs:attribute name="sensitivity" type="xs:string" use="optional"/>
+    <xs:attribute name="desc" type="xs:string" use="optional"/>
+
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:element name="FileRef" type="FileRefType"/>
+
+  <xs:complexType name="FileRefType">
+    <xs:annotation>
+      <xs:documentation>
+        Reference to an existing, supplied or previously produced Data Unit.
+
+        This schema cannot verify whether the referenced Data Unit exists.
+        A Cognitive Engine must resolve FileRefs during execution validation.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:attribute name="id" type="IdentifierType" use="required"/>
+    <xs:attribute name="role" type="xs:string" use="optional"/>
+    <xs:attribute name="version" type="xs:string" use="optional"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- ========================================================= -->
+  <!-- Output                                                     -->
+  <!-- ========================================================= -->
+
+  <xs:element name="Output" type="OutputType"/>
+
+  <xs:complexType name="OutputType">
+    <xs:annotation>
+      <xs:documentation>
+        Declares outputs.
+
+        Inside an Operation, Output usually declares produced File elements.
+
+        At root level, Output usually references final exported Data Units using
+        FileRef or CollectionRef.
+
+        This draft schema allows both declaration and reference forms in either
+        position for flexibility. Engines may enforce stricter context-specific
+        rules.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:choice minOccurs="1" maxOccurs="unbounded">
+      <xs:element ref="File"/>
+      <xs:element ref="FileRef"/>
+      <xs:element ref="Collection"/>
+      <xs:element ref="CollectionRef"/>
+    </xs:choice>
+
+    <xs:attribute name="desc" type="xs:string" use="optional"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <!-- ========================================================= -->
+  <!-- Draft Semantic Contracts                                  -->
+  <!-- ========================================================= -->
+
+  <xs:complexType name="ContractsType">
+    <xs:annotation>
+      <xs:documentation>
+        Optional draft section for semantic contracts.
+
+        Contracts are not required for minimal TTML, but the framework describes
+        them as important for future validation of semantic correctness.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:sequence>
+      <xs:element name="Contract" type="ContractType" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ContractType">
+    <xs:annotation>
+      <xs:documentation>
+        Draft semantic contract for a Data Unit or output.
+
+        A contract describes what an artefact must contain or satisfy to be
+        considered valid for downstream use.
+      </xs:documentation>
+    </xs:annotation>
+
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="RequiredSection" type="NamedRequirementType"/>
+      <xs:element name="RequiredField" type="NamedRequirementType"/>
+      <xs:element name="RequiredFormat" type="TextRequirementType"/>
+      <xs:element name="QualityCriterion" type="TextRequirementType"/>
+      <xs:element name="ProhibitedContent" type="TextRequirementType"/>
+      <xs:element name="Validator" type="ValidatorType"/>
+      <xs:element name="Review" type="ReviewType"/>
+      <xs:element name="HumanApproval" type="HumanApprovalType"/>
+    </xs:choice>
+
+    <xs:attribute name="id" type="IdentifierType" use="required"/>
+    <xs:attribute name="semanticType" type="IdentifierType" use="optional"/>
+    <xs:attribute name="target" type="IdentifierType" use="optional"/>
+    <xs:attribute name="strictness" type="ContractStrictness" use="optional" default="required"/>
+    <xs:attribute name="desc" type="xs:string" use="optional"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="NamedRequirementType">
+    <xs:attribute name="name" type="NonEmptyString" use="required"/>
+    <xs:attribute name="desc" type="xs:string" use="optional"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="TextRequirementType">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" type="xs:string" use="optional"/>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="ValidatorType">
+    <xs:annotation>
+      <xs:documentation>
+        Deterministic validator or engine-registered validation function.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="function" type="IdentifierType" use="required"/>
+    <xs:attribute name="desc" type="xs:string" use="optional"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="ReviewType">
+    <xs:annotation>
+      <xs:documentation>
+        LLM-assisted or module-based semantic review declaration.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="rubric" type="IdentifierType" use="optional"/>
+    <xs:attribute name="module" type="xs:string" use="optional"/>
+    <xs:attribute name="desc" type="xs:string" use="optional"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+  <xs:complexType name="HumanApprovalType">
+    <xs:annotation>
+      <xs:documentation>
+        Declares that human approval is required or recommended for this contract.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="required" type="xs:boolean" use="optional" default="true"/>
+    <xs:attribute name="role" type="xs:string" use="optional"/>
+    <xs:attribute name="reason" type="xs:string" use="optional"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+
+</xs:schema>
