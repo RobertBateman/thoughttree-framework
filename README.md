@@ -452,31 +452,31 @@ thoughttree-framework/
 
   docs/
     ONE_PAGE_OVERVIEW.md
-    WHY_THIS_MATTERS.md
-    ARCHITECTURE.md
-    PROGRAM_MODEL.md
-    COGNITIVE_ENGINE.md
-    EXECUTION_SEMANTICS.md
-    SEMANTIC_CONTRACTS.md
-    AUTHORING_GUIDE.md
-    ThoughtTreeFramework.pdf
-
+	WHY_THIS_MATTERS.md
+	ARCHITECTURE.md
+	PROGRAM_MODEL.md
+	COGNITIVE_ENGINE.md
+	EXECUTION_SEMANTICS.md
+	SEMANTIC_CONTRACTS.md
+	AUTHORING_GUIDE.md
+	ThoughtTreeFramework.pdf
+	
   spec/
     TTML_DRAFT.md
-    TTMLSchema.xsd
-    EXECUTION_TRACE_SCHEMA_DRAFT.json
-    CONTRACT_SCHEMA_DRAFT.json
-
+	TTMLSchema.xsd
+	EXECUTION_TRACE_SCHEMA_DRAFT.json
+	CONTRACT_SCHEMA_DRAFT.json
+	
   examples/
     article-summary-review/
-    novel-generation-pipeline/
-    video-game-tdd/
-    compliance-gap-analysis/
-    module-improvement/
-
+	novel-generation-pipeline/
+	video-game-tdd/
+	compliance-gap-analysis/
+	module-improvement/
+	
   prototypes/
-    unity-novel-poc/
-    unity-cognitive-engine/
+  	unity-novel-poc/
+	unity-cognitive-engine/
 	
 # Who Might Be Interested?
 This project may be relevant to:
