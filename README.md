@@ -441,7 +441,7 @@ A more advanced engine could add:
 
 # Repository Structure
 
-thoughttree-framework/
+thoughttree-framework
   README.md
   HANDOFF.md
   STATUS.md
@@ -450,7 +450,7 @@ thoughttree-framework/
   GOVERNANCE.md
   LICENSE.md
 
-  docs/
+  docs
     ONE_PAGE_OVERVIEW.md
 	WHY_THIS_MATTERS.md
 	ARCHITECTURE.md
@@ -461,22 +461,22 @@ thoughttree-framework/
 	AUTHORING_GUIDE.md
 	ThoughtTreeFramework.pdf
 	
-  spec/
+  spec
     TTML_DRAFT.md
 	TTMLSchema.xsd
 	EXECUTION_TRACE_SCHEMA_DRAFT.json
 	CONTRACT_SCHEMA_DRAFT.json
 	
-  examples/
-    article-summary-review/
-	novel-generation-pipeline/
-	video-game-tdd/
-	compliance-gap-analysis/
-	module-improvement/
+  examples
+    article-summary-review
+	novel-generation-pipeline
+	video-game-tdd
+	compliance-gap-analysis
+	module-improvement
 	
-  prototypes/
-  	unity-novel-poc/
-	unity-cognitive-engine/
+  prototypes
+  	unity-novel-poc
+	unity-cognitive-engine
 	
 # Who Might Be Interested?
 This project may be relevant to:
